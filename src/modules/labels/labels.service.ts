@@ -9,4 +9,8 @@ export class LabelsService {
   listLabels(): Promise<Label[]> {
     return this.labels.listLabels();
   }
+
+  getLabelsByAssignmentIds(assignmentIds: string[]): Promise<Map<string, string[]>> {
+    return this.labels.findNamesByAssignmentIds(assignmentIds);
+  }
 }

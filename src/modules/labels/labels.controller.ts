@@ -1,13 +1,16 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get, UseGuards } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
 
+import { AuthGuard, RequireCapability } from "../identity/auth.guard.js";
 import { LabelsService } from "./labels.service.js";
-import { RequireCapability } from "../identity/auth.guard.js";
 
-@Controller("labels")
+@ApiTags("labels")
+@Controller("api/v1")
+@UseGuards(AuthGuard)
 export class LabelsController {
   constructor(private readonly labels: LabelsService) {}
 
-  @Get()
+  @Get("labels")
   @RequireCapability("assignments.read")
   list() {
     return this.labels.listLabels();
