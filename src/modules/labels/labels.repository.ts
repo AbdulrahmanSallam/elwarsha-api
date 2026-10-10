@@ -18,27 +18,30 @@ export class LabelsRepository {
     }));
   }
 
-  async findNamesByAssignmentIds(
+  async findLabelsByAssignmentIds(
     assignmentIds: string[],
-  ): Promise<Map<string, string[]>> {
+  ): Promise<Map<string, Label[]>> {
     if (assignmentIds.length === 0) return new Map();
 
     const rows = await this.prisma.assignmentLabel.findMany({
       where: { assignmentId: { in: assignmentIds } },
-      include: { label: { select: { name: true } } },
+      include: {
+        label: { select: { id: true, name: true } },
+      },
     });
 
-    const byAssignment = new Map<string, string[]>();
+    const byAssignment = new Map<string, Label[]>();
     for (const row of rows) {
       const list = byAssignment.get(row.assignmentId) ?? [];
-      list.push(row.label.name);
+      list.push({ id: row.label.id, name: row.label.name });
       byAssignment.set(row.assignmentId, list);
     }
 
     for (const [key, list] of byAssignment) {
-      list.sort();
+      list.sort((a, b) => a.name.localeCompare(b.name));
       byAssignment.set(key, list);
     }
+
     return byAssignment;
   }
 }

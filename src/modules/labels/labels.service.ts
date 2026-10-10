@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
+
+import type { Label } from "../../domain/models.js";
 import { LabelsRepository } from "./labels.repository.js";
-import { Label } from "../../domain/models.js";
 
 @Injectable()
 export class LabelsService {
@@ -10,7 +11,7 @@ export class LabelsService {
     return this.labels.listLabels();
   }
 
-  getLabelsByAssignmentIds(assignmentIds: string[]): Promise<Map<string, string[]>> {
-    return this.labels.findNamesByAssignmentIds(assignmentIds);
+  getLabelsByAssignmentIds(assignmentIds: string[]): Promise<Map<string, Label[]>> {
+    return this.labels.findLabelsByAssignmentIds(assignmentIds);
   }
 }
