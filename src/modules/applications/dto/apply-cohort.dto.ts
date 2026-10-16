@@ -12,13 +12,13 @@ import {
 
 export const CURRENT_STATUS_OPTIONS = [
   "student",
-  "graduate",
-  "working in tech",
-  "switching career",
+  "recent_graduate",
+  "employed_tech",
+  "career_switcher",
   "other",
 ] as const;
 
-export const GIT_EXPERIENCE_OPTIONS = ["never", "basics only", "comfortable"] as const;
+export const GIT_EXPERIENCE_OPTIONS = ["none", "basics", "comfortable"] as const;
 
 export class ApplyCohortDto {
   @ApiProperty({ example: "Ahmed Mohamed" })

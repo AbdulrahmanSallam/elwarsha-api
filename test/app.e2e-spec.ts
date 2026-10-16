@@ -211,6 +211,21 @@ describe("Cohort Applications (e2e)", () => {
   let prisma: PrismaService;
   const url = "/api/v1/cohorts/cohort-2/applications";
 
+  // Enum values match `ApplyCohortInput` from @elwarsha/api-client.
+  const CURRENT_STATUS_VALUES = [
+    "student",
+    "recent_graduate",
+    "employed_tech",
+    "career_switcher",
+    "other",
+  ] as const;
+
+  const GIT_EXPERIENCE_VALUES = ["none", "basics", "comfortable"] as const;
+
+  // Old assignment-doc values that must now be rejected.
+  const STALE_STATUS_VALUES = ["graduate", "working in tech", "switching career"];
+  const STALE_GIT_VALUES = ["never", "basics only"];
+
   const buildPayload = (overrides: Record<string, unknown> = {}) => ({
     fullName: "Ahmed Mohamed",
     email: `ahmed-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
@@ -408,5 +423,42 @@ describe("Cohort Applications (e2e)", () => {
     await request(app.getHttpServer())
       .get(`${url}/00000000-0000-0000-0000-000000000000`)
       .expect(404);
+  });
+
+  it("accepts every api-client enum value for currentStatus and gitExperience", async () => {
+    for (const status of CURRENT_STATUS_VALUES) {
+      for (const git of GIT_EXPERIENCE_VALUES) {
+        await request(app.getHttpServer())
+          .post(url)
+          .send(buildPayload({ currentStatus: status, gitExperience: git }))
+          .expect(201);
+      }
+    }
+  });
+
+  it("rejects the legacy assignment-doc enum values", async () => {
+    for (const stale of STALE_STATUS_VALUES) {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send(buildPayload({ currentStatus: stale }))
+        .expect(422);
+
+      const names = (response.body.invalidParams as { name: string }[]).map(
+        (param) => param.name,
+      );
+      expect(names).toContain("currentStatus");
+    }
+
+    for (const stale of STALE_GIT_VALUES) {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send(buildPayload({ gitExperience: stale }))
+        .expect(422);
+
+      const names = (response.body.invalidParams as { name: string }[]).map(
+        (param) => param.name,
+      );
+      expect(names).toContain("gitExperience");
+    }
   });
 });
