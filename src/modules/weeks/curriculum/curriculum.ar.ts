@@ -483,62 +483,201 @@ export const curriculumAr: Record<number, CurriculumWeek> = {
     },
     3: {
       weekNumber: 3,
-      title: "التدفق غير المتزامن و Webhooks",
-      tagline: "افصل قبول الطلب عن معالجته الثقيلة لحماية استقرار النظام",
-      concept: "التدفق غير المتزامن",
-      guidingQuestion: "ليه إضافة المهمة للطابور عند القبول أأمن من عمل عمليات خارجية أثناء طلب HTTP؟",
+      title: "تعديل المخطط وعقود Zod وإدارة حالة الخادم",
+      tagline: "كيف تتدفق تعديلات قاعدة البيانات بأمان عبر عقود التحقق إلى واجهة مستخدم تفاعلية",
+      concept: "تعديلات قاعدة البيانات وحالة الخادم",
+      guidingQuestion: "كيف تتدفق تعديلات المخطط بأمان عبر عقود التحقق عند وقت التشغيل إلى مكونات React التفاعلية؟",
       bigIdea:
-        "عندما ترسل منصة خارجية مثل GitHub إشعار Webhook إلى خادمنا، يجب أن نرد في أجزاء من الثانية. تنفيذ مهام ثقيلة أو استدعاء شبكات أخرى أثناء طلب الـ HTTP يعرض الخادم للانهيار. في هذا الأسبوع، نتتبع دورة حياة أحداث GitHub Webhook من التحقق من توقيع HMAC، ثم إدراج المهمة فوراً في طابور PostgreSQL دائم، وأخيراً معالجتها عبر Worker مستقل.",
+        "في الأسبوع الثاني، بنيت استمارة ميسرة وربطت عقود الـ HTTP بين الواجهة الأمامية والخلفية. هذا الأسبوع، نربط كافة طبقات النظام في مسار متكامل:\n\n١. **قاعدة البيانات و Prisma:** إنشاء وتطبيق تعديلات المخطط (Migrations) بأمان مع قيم افتراضية تضمن التوافق العكسي.\n٢. **خدمات NestJS:** قراءة تقدم الدفعة من قاعدة البيانات وتطبيق قواعد فتح وإغلاق الأسابيع ديناميكياً.\n٣. **عقود Zod عند التشغيل:** التحقق الصارم من صحة استجابات الـ API عند حدود النظام لمنع الأخطاء غير المتوقعة.\n٤. **إدارة حالة الخادم عبر TanStack Query:** تخزين ومزامنة البيانات المؤقتة مع خطافات مخصصة.\n٥. **معمارية المكونات النظيفة:** بناء مكونات واجهة مستخدم تلتزم بقاعدة (مكون واحد لكل ملف) ومبدأ المسؤولية الواحدة.",
       outcomes: [
-        "التحقق من توقيع HMAC Webhook بشكل آمن ومقاوم لهجمات التوقيت.",
-        "إدراج المهمة في طابور مهام دائم بقاعدة البيانات دون حظر استجابة HTTP السريعة.",
-        "فهم استراتيجية قفل السجلات FOR UPDATE SKIP LOCKED في معالجة الطوابير متعددة الخيوط.",
+        "إنشاء وتطبيق تعديلات مخطط PostgreSQL بأمان عبر Prisma CLI مع قيم افتراضية تضمن التوافق العكسي.",
+        "تطبيق قواعد العمل وقفل الأسابيع ديناميكياً في خدمات NestJS بالاعتماد على حالة قاعدة البيانات.",
+        "التحقق الصارم من صحة استجابة الـ API عند وقت التشغيل باستخدام مخططات Zod.",
+        "إدارة حالة الخادم غير المتزامنة والتحميل والتخزين المؤقت ومعالجة الأخطاء عبر TanStack React Query.",
+        "تنظيم واجهة المستخدم في مكونات مستقلة وميسرة وفق قاعدة مكون واحد لكل ملف.",
       ],
       coreConcepts: [
-        "التواصل غير المتزامن (Asynchronous Decoupling)",
-        "التحقق من التوقيع الرقمي (HMAC Signature Verification)",
-        "طوابير المهام الدائمة (Persistent Database Job Queues)",
-        "معالجة العمال واستراتيجيات القفل الآمن (Worker Pools & Lease Locks)",
+        "تعديلات قاعدة البيانات وتطور المخطط (Prisma Migrations)",
+        "القيم الافتراضية والتوافق العكسي في قواعد البيانات العلائقية",
+        "عقود التحقق عند وقت التشغيل (Zod Runtime Validation)",
+        "إدارة حالة الخادم والتخزين المؤقت (TanStack Query v5)",
+        "مبدأ المسؤولية الواحدة وتفكيك المكونات (مكون واحد لكل ملف)",
+        "عرض البيانات الميسر والشبكات التفاعلية",
       ],
       appliedThroughTheStack: [
-        { layer: "NestJS", details: "متحكم Webhooks الموثق وتخزين المهام في جدول Jobs." },
-        { layer: "PostgreSQL", details: "استخدام FOR UPDATE SKIP LOCKED لضمان حجز المهمة لعامل واحد دون تكرار." },
-        { layer: "Worker", details: "عملية مستقلة دورية تسحب المهام المحجوزة وتنفذها وتعالج الفشل." },
+        {
+          layer: "PostgreSQL",
+          details: "تعديل المخطط عبر Prisma لإضافة currentWeekNumber مع @default(1).",
+        },
+        {
+          layer: "NestJS",
+          details: "قواعد قفل الأسابيع الديناميكية في WeeksService اعتماداً على cohort.currentWeekNumber.",
+        },
+        {
+          layer: "Zod",
+          details: "التحقق الصارم عند وقت التشغيل لبيانات الدفعة وبطاقات الأسابيع.",
+        },
+        {
+          layer: "React",
+          details: "دمج TanStack Query عبر useCohortWeeks ومكونات البطاقات المنفصلة وصفحة ملخص الأسابيع.",
+        },
       ],
       assignment: {
-        title: "التحقق من توقيع الـ Webhook وإدراج المهام",
+        title: "تعديل قاعدة البيانات، عقود Zod، وبناء صفحة ملخص الأسابيع",
         summary:
-          "تنفيذ التحقق من توقيع أحداث GitHub Webhook برمجياً وإدراجها كمهام في طابور PostgreSQL مع معالجة آمنة.",
-        detailsMd: `### المخرجات البرمجية
-- **متحكم Webhooks**: التحقق الآمن من ترويسة \`X-Hub-Signature-256\` باستخدام HMAC SHA256.
-- **خدمة المهام (Job Service)**: إدراج حمولة الحدث في جدول \`Job\` بالحالة \`queued\`.
-- **معالجة العامل (Worker)**: حجز المهمة بقفل إيجار ومعالجتها ثم تحديث حالتها إلى \`completed\`.`,
+          "تعديل مخطط قاعدة البيانات لتتبع تقدم الدفعة، والتحقق من صحة البيانات باستخدام Zod، وبناء صفحة ملخص الأسابيع باستخدام TanStack React Query ومكونات منفصلة.",
+        detailsMd: `### مهمة الأسبوع الثالث: تعديل المخطط وعقود Zod وإدارة حالة الخادم
+
+#### ١. تعديل قاعدة البيانات والواجهة الخلفية (\`elwarsha-api\`)
+- في ملف \`prisma/schema.prisma\`، أضف الحقل \`currentWeekNumber Int @default(1)\` إلى نموذج \`Cohort\`.
+- نفذ أمر التعديل: \`npx prisma migrate dev --name add_cohort_current_week\`.
+- حدّث ملف البذور \`prisma/seed.ts\` لتعيين \`currentWeekNumber: 3\` للدفعة \`cohort-01\`.
+- في \`src/modules/weeks/weeks.service.ts\`، اعتمد على \`cohort.currentWeekNumber\`:
+  - الأسابيع \`<= currentWeekNumber\` تكون مفتوحة.
+  - الأسبوع \`=== currentWeekNumber\` يكون نشطاً (\`isCurrent: true\` و \`status: "active"\`).
+  - الأسابيع \`> currentWeekNumber\` تكون مقفلة (\`isLocked: true\` و \`status: "upcoming"\`).
+  - تضمين \`currentWeekNumber\` ضمن كائن \`cohortRef\`.
+
+#### ٢. عقود التحقق وواجهة المستخدم (\`elwarsha-web\`)
+- في \`src/features/weeks/weeks.schema.ts\`، حدّث \`cohortRefSchema\` للتحقق من \`currentWeekNumber\`.
+- في \`src/features/weeks/useCohortWeeks.ts\`، أنشئ الخطاف المخصص باستخدام TanStack Query (\`useQuery\`) وتحقق من الاستجابة عبر Zod.
+- ابنِ مكونات منفصلة في \`src/features/weeks/components/\` (مكون واحد لكل ملف بدقة):
+  - \`CohortHeaderBar.tsx\`: يعرض اسم الدفعة، نطاق التواريخ، وشارة الأسبوع الحالي.
+  - \`WeekCard.tsx\`: بطاقة الأسبوع المتاح مع شارة الحالة ومفهوم الأسبوع ورابط التفاصيل.
+  - \`LockedWeekCard.tsx\`: بطاقة الأسبوع المغلق بأيقونة القفل ورابط معطل.
+- في \`src/features/weeks/WeeksPage.tsx\`، استهلك الخطاف \`useCohortWeeks\`، ورندر حالات التحميل والخطأ وشبكة البطاقات.
+
+#### ٣. معيار التحقق والاختبار
+- تشغيل اختبارات الواجهة الخلفية: \`yarn test\` و \`yarn test:e2e\`.
+- تشغيل اختبارات وبناء الواجهة الأمامية: \`yarn test\` و \`yarn build\`.`,
       },
       resources: {
         required: [
           {
-            title: "توثيق GitHub Webhooks",
-            url: "https://docs.github.com/en/webhooks",
-            layers: "Backend",
+            title: "تحسينات الرندرة في TanStack Query (خاصية select)",
+            url: "https://tanstack.com/query/latest/docs/framework/react/guides/render-optimizations",
+            layers: "Frontend",
             format: "Read",
+            time: "١٥ دقيقة",
+            why: "اشتقاق نماذج العرض من الذاكرة المؤقتة دون إعادة رندرة غير ضرورية للمكونات.",
+          },
+          {
+            title: "الدورة الشاملة لـ TanStack Query 2026 — PedroTech",
+            url: "https://youtu.be/mqV5OvbyXcM?si=d5VlfO4v_QXdfTTk",
+            layers: "Frontend",
+            format: "Watch",
+            time: "٤٥ دقيقة",
+            why: "شرح مرئي شامل لمفاتيح الاستعلام وحالات التحميل والخطأ وخطافات جلب البيانات.",
+          },
+          {
+            title: "الدليل الشامل للتحقق مع Zod في React — Cosden Solutions",
+            url: "https://www.youtube.com/watch?v=U9PYyMhDc_k",
+            layers: "Frontend, Concept",
+            format: "Watch",
+            time: "٢٥ دقيقة",
+            why: "فهم تحليل المخططات عند وقت التشغيل واستنتاج الأنواع والتحقق الدفاعي عند الحدود.",
+          },
+          {
+            title: "دليل تعديلات Prisma خطوة بخطوة — Prisma",
+            url: "https://www.youtube.com/watch?v=ZaCFsFES5yQ",
+            layers: "Backend, Database",
+            format: "Watch",
             time: "٢٠ دقيقة",
-            why: "فهم ترويسات GitHub Webhook وآلية توقيع HMAC.",
+            why: "كيف تنشئ Prisma ملفات SQL التزايدية وتتبعها وتطبقها.",
+          },
+          {
+            title: "دليل البدء مع Prisma 6 Migrate (التوثيق الرسمي)",
+            url: "https://www.prisma.io/docs/orm/v6/prisma-migrate/getting-started",
+            layers: "Backend, Database",
+            format: "Read",
+            time: "١٥ دقيقة",
+            why: "المرجع الرسمي لأمر prisma migrate dev وسجل التعديلات والقيم الافتراضية للأعمدة.",
+          },
+          {
+            title: "التوجيه الإعلاني في React Router (الدليل الرسمي)",
+            url: "https://reactrouter.com/start/declarative/routing",
+            layers: "Frontend",
+            format: "Read",
+            time: "١٥ دقيقة",
+            why: "معاملات الـ URL ومطابقة المسارات والربط بين صفحة النظرة العامة وصفحة التفاصيل.",
           },
         ],
         assignment: [
           {
-            title: "دليل PostgreSQL FOR UPDATE SKIP LOCKED",
-            url: "https://www.2ndquadrant.com/en/blog/what-is-select-for-update-skip-locked-in-postgresql-9-5/",
-            layers: "Database",
+            title: "وصفة Prisma مع NestJS (الوثائق الرسمية)",
+            url: "https://docs.nestjs.com/recipes/prisma",
+            layers: "Backend",
             format: "Read",
             time: "١٥ دقيقة",
-            why: "آلية تنفيذ طوابير المهام الآمنة في قواعد البيانات العلائقية.",
+            why: "إعداد وحقن PrismaService عبر وحدات NestJS المختلفة.",
+          },
+          {
+            title: "توثيق وحدات NestJS (Modules)",
+            url: "https://docs.nestjs.com/modules",
+            layers: "Backend",
+            format: "Read",
+            time: "١٥ دقيقة",
+            why: "تنظيم وحدات الميزات والمتحكمات ومزودي الخدمات بهيكلية نظيفة.",
+          },
+          {
+            title: "توثيق وتحليل مخططات Zod",
+            url: "https://zod.dev",
+            layers: "Contract",
+            format: "Read",
+            time: "١٥ دقيقة",
+            why: "مرجع دوال z.object و z.array و z.number و safeParse.",
           },
         ],
-        alternative: [],
+        alternative: [
+          {
+            title: "مقدمة TanStack Query (بالعربية) — kimz codes",
+            url: "https://youtu.be/KIS-MJfuPDY?si=NEFlBFNJ5VPn7Xzt",
+            layers: "Frontend",
+            format: "Watch",
+            time: "٢٠ دقيقة",
+            why: "مقدمة باللغة العربية للنموذج الذهني لـ TanStack Query وأساسيات الخطافات.",
+          },
+          {
+            title: "بناء استمارات والتحقق مع Zod (بالعربية) — يوسف تركي",
+            url: "https://youtu.be/4j5SZBTIXLc?si=LRh3UaiP1ODDDbDs",
+            layers: "Frontend, Contract",
+            format: "Watch",
+            time: "٢٥ دقيقة",
+            why: "شرح عملي بالعربية لبناء المخططات والتحقق من العقود عند وقت التشغيل.",
+          },
+          {
+            title: "كورس Prisma الشامل مع PostgreSQL & Express (بالعربية) — علي سليم",
+            url: "https://www.youtube.com/watch?v=KoFgG7Rjhbc&t=775s",
+            layers: "Backend, Database",
+            format: "Watch",
+            time: "٣٠ دقيقة",
+            why: "كورس عربي يغطي مخططات Prisma وتعديلاتها وعلاقات PostgreSQL.",
+          },
+          {
+            title: "تعلم كل شيء عن Prisma مع TypeScript (بالعربية) — Simple Arab Code",
+            url: "https://www.youtube.com/watch?v=uRPLhqR_d5I&t=92s",
+            layers: "Backend, Database",
+            format: "Watch",
+            time: "٢٥ دقيقة",
+            why: "نظرة عامة بالعربية على توليد عميل Prisma والاستعلامات.",
+          },
+          {
+            title: "كورس Nest JS في ٣ ساعات (بالعربية) — أكاديمية ترميز",
+            url: "https://www.youtube.com/watch?v=RwOxUg2rsjY&t=4794s",
+            layers: "Backend",
+            format: "Watch",
+            time: "٤٠ دقيقة",
+            why: "شرح عربي مكثف للمتحكمات والخدمات وحقن الاعتماديات في NestJS.",
+          },
+        ],
       },
-      reflectionQuestion: "ليه إضافة المهمة للطابور عند القبول أأمن من عمل عمليات خارجية أثناء طلب HTTP؟",
-      prerequisites: ["الأسبوع الثاني", "تشغيل عامل الورشة محلياً (Worker)"],
+      reflectionQuestion:
+        "لماذا يعد التحقق عند وقت التشغيل باستخدام Zod ضرورياً في الواجهة الأمامية حتى لو كانت أنواع TypeScript لا تعطي أي أخطاء أثناء البناء؟",
+      prerequisites: [
+        "الأسبوع الثاني: ربط الواجهة الأمامية بالخلفية (HTTP وعقود الـ API)",
+        "تشغيل PostgreSQL محلياً عبر Docker Compose",
+        "Node 22 و Yarn و Vitest",
+      ],
     },
     4: {
       weekNumber: 4,

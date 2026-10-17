@@ -519,62 +519,202 @@ The backend sends a clear JSON response listing every invalid field:
     },
     3: {
       weekNumber: 3,
-      title: "Asynchronous Data Flow & Webhooks",
-      tagline: "Separate fast HTTP acceptance from background processing",
-      concept: "Asynchronous data flow",
-      guidingQuestion: "Why is enqueue-on-accept safer than doing GitHub I/O in the HTTP request?",
+      title: "Database Migrations, Runtime Contracts & Server State",
+      tagline: "How schema changes flow safely through contracts to reactive UI components",
+      concept: "Database Migrations & Server State",
+      guidingQuestion: "How do database schema changes flow safely through runtime contracts to reactive UI components?",
       bigIdea:
-        "When an external platform like GitHub sends a webhook event, our server must acknowledge receipt within milliseconds. Doing heavy computations, database locking, or outbound network calls inside the synchronous HTTP request exposes the system to timeouts and cascading failures. In this week, we trace a webhook event from HMAC signature verification to durable PostgreSQL job enqueuing and asynchronous worker execution.",
+        "In Week 2, you built an accessible application form and connected client-server HTTP contracts. This week, we connect the complete end-to-end vertical slice across all architectural layers:\n\n1. **PostgreSQL & Prisma:** Adding and applying database migrations safely with backwards-compatible defaults.\n2. **NestJS Service & API:** Reading cohort progression from the database and driving dynamic week locking rules.\n3. **Zod Runtime Contracts:** Validating API payloads at the frontend boundary to guarantee type safety and prevent runtime errors.\n4. **TanStack React Query:** Caching, synchronizing, and handling async server state with custom hooks.\n5. **Modular React Architecture:** Rendering single-responsibility components following the one-component-per-file pattern.",
       outcomes: [
-        "Verify HMAC webhook signatures safely against timing attacks.",
-        "Enqueue background jobs durably without blocking the synchronous HTTP response.",
-        "Observe the worker claim queued jobs using FOR UPDATE SKIP LOCKED.",
+        "Create and apply PostgreSQL schema migrations safely using Prisma CLI with default values for backwards compatibility.",
+        "Enforce dynamic business and locking rules in NestJS services driven directly by database state.",
+        "Validate API response payloads at the system boundary using Zod runtime schemas.",
+        "Manage asynchronous server state, caching, loading, and error states using TanStack React Query hooks.",
+        "Organize user interface features into clean, modular single-responsibility components adhering strictly to one component per file.",
       ],
       coreConcepts: [
-        "Asynchronous decoupling",
-        "HMAC signature verification",
-        "Durable PostgreSQL job queues",
-        "Worker pools and lease locks",
+        "Database migrations & schema evolution (Prisma migrate)",
+        "Backwards-compatible defaults in relational databases",
+        "Runtime contract validation (Zod)",
+        "Server state management & caching (TanStack Query v5)",
+        "Single Responsibility Principle & Component Modularity (1 component per file)",
+        "Accessible data presentation & responsive grid layouts",
       ],
       appliedThroughTheStack: [
-        { layer: "NestJS", details: "Signed GitHub controller endpoint and persistent job enqueueing." },
-        { layer: "PostgreSQL", details: "Safe concurrency with FOR UPDATE SKIP LOCKED." },
-        { layer: "Worker", details: "Autonomous background polling process that leases and executes tasks." },
+        {
+          layer: "PostgreSQL",
+          details: "Prisma schema migration adding currentWeekNumber with @default(1).",
+        },
+        {
+          layer: "NestJS",
+          details: "WeeksService dynamic locking rules driven by cohort.currentWeekNumber.",
+        },
+        {
+          layer: "Zod",
+          details: "Runtime parsing and type assertion for cohort and week card payloads.",
+        },
+        {
+          layer: "React",
+          details:
+            "TanStack Query integration (useCohortWeeks), modular cards (CohortHeaderBar, WeekCard, LockedWeekCard), and WeeksPage layout.",
+        },
       ],
       assignment: {
-        title: "Signed Webhook Ingestion & Job Queueing",
+        title: "Database Migrations, Zod Contracts & Weeks Summary Page",
         summary:
-          "Implement secure HMAC verification for GitHub Webhook deliveries and queue them durably in PostgreSQL.",
-        detailsMd: `### Deliverables
-- **Webhook Controller**: Verify \`X-Hub-Signature-256\` using HMAC SHA256 and reject invalid payloads.
-- **Job Service**: Enqueue payload to \`Job\` table with status \`queued\`.
-- **Worker Execution**: Lease jobs using \`FOR UPDATE SKIP LOCKED\` and process asynchronously.`,
+          "Migrate the database to track cohort progress, validate API data with Zod, and build the Weeks Summary Page using TanStack React Query.",
+        detailsMd: `### Week 3 Assignment: Database Migrations, Runtime Contracts & Server State
+
+#### 1. Database Migration & Backend (\`elwarsha-api\`)
+- In \`prisma/schema.prisma\`, add \`currentWeekNumber Int @default(1)\` to \`model Cohort\`.
+- Run \`npx prisma migrate dev --name add_cohort_current_week\`.
+- Update \`prisma/seed.ts\` setting \`currentWeekNumber: 3\` on \`cohort-01\`.
+- In \`src/modules/weeks/weeks.service.ts\`, read \`cohort.currentWeekNumber\`:
+  - Weeks \`<= currentWeekNumber\` are unlocked.
+  - Week \`=== currentWeekNumber\` is active (\`isCurrent: true\`, \`status: "active"\`).
+  - Weeks \`> currentWeekNumber\` are locked (\`isLocked: true\`, \`status: "upcoming"\`).
+  - Expose \`currentWeekNumber\` in \`cohortRef\`.
+
+#### 2. Frontend Contract & UI (\`elwarsha-web\`)
+- In \`src/features/weeks/weeks.schema.ts\`, update \`cohortRefSchema\` to parse and validate \`currentWeekNumber\`.
+- In \`src/features/weeks/useCohortWeeks.ts\`, implement the hook with TanStack Query (\`useQuery\`), validating the response with Zod.
+- Create modular components in \`src/features/weeks/components/\` (strictly 1 component per file):
+  - \`CohortHeaderBar.tsx\`: Cohort name, date range, and current week badge.
+  - \`WeekCard.tsx\`: Unlocked card with status badge, concept, and link to detail page.
+  - \`LockedWeekCard.tsx\`: Dimmed locked card with padlock icon and disabled link.
+- In \`src/features/weeks/WeeksPage.tsx\`, consume \`useCohortWeeks\`, render loading and error states, and map over weeks.
+
+#### 3. Verification Bar
+- Run \`yarn test\` and \`yarn test:e2e\` in \`elwarsha-api\`.
+- Run \`yarn test\` and \`yarn build\` in \`elwarsha-web\`.`,
       },
       resources: {
         required: [
           {
-            title: "GitHub Webhook Documentation",
-            url: "https://docs.github.com/en/webhooks",
-            layers: "Backend",
+            title: "TanStack Query Render Optimizations (select)",
+            url: "https://tanstack.com/query/latest/docs/framework/react/guides/render-optimizations",
+            layers: "Frontend",
             format: "Read",
+            time: "15 min",
+            why: "How to derive view models from query cache without unnecessary component re-renders.",
+          },
+          {
+            title: "TanStack Query Full Course 2026 — PedroTech",
+            url: "https://youtu.be/mqV5OvbyXcM?si=d5VlfO4v_QXdfTTk",
+            layers: "Frontend",
+            format: "Watch",
+            time: "45 min",
+            why: "Complete video walkthrough of query keys, loading/error states, and data fetching hooks.",
+          },
+          {
+            title: "Zod Validation in React (Complete Tutorial) — Cosden Solutions",
+            url: "https://www.youtube.com/watch?v=U9PYyMhDc_k",
+            layers: "Frontend, Concept",
+            format: "Watch",
+            time: "25 min",
+            why: "Understanding runtime schema parsing, type inference, and defensive boundary validation.",
+          },
+          {
+            title: "Prisma Migrations: A Step-by-Step Guide — Prisma",
+            url: "https://www.youtube.com/watch?v=ZaCFsFES5yQ",
+            layers: "Backend, Database",
+            format: "Watch",
             time: "20 min",
-            why: "Understand delivery payloads and HMAC SHA256 security.",
+            why: "How Prisma creates, tracks, and applies incremental SQL migration files.",
+          },
+          {
+            title: "Prisma 6 Migrate Getting Started",
+            url: "https://www.prisma.io/docs/orm/v6/prisma-migrate/getting-started",
+            layers: "Backend, Database",
+            format: "Read",
+            time: "15 min",
+            why: "Official reference for prisma migrate dev, migration history, and default column values.",
+          },
+          {
+            title: "React Router: Declarative Routing Guide",
+            url: "https://reactrouter.com/start/declarative/routing",
+            layers: "Frontend",
+            format: "Read",
+            time: "15 min",
+            why: "URL params, route matching, and linking between summary and detail views.",
           },
         ],
         assignment: [
           {
-            title: "PostgreSQL FOR UPDATE SKIP LOCKED",
-            url: "https://www.2ndquadrant.com/en/blog/what-is-select-for-update-skip-locked-in-postgresql-9-5/",
-            layers: "Database",
+            title: "NestJS Prisma Recipe",
+            url: "https://docs.nestjs.com/recipes/prisma",
+            layers: "Backend",
             format: "Read",
             time: "15 min",
-            why: "Safe concurrent queue polling in relational databases.",
+            why: "Setting up and injecting PrismaService across NestJS modules.",
+          },
+          {
+            title: "NestJS Modules Documentation",
+            url: "https://docs.nestjs.com/modules",
+            layers: "Backend",
+            format: "Read",
+            time: "15 min",
+            why: "Structuring feature modules, controllers, and service providers cleanly.",
+          },
+          {
+            title: "Zod Documentation & Schema Parsing",
+            url: "https://zod.dev",
+            layers: "Contract",
+            format: "Read",
+            time: "15 min",
+            why: "API reference for z.object, z.array, z.number, and safeParse.",
           },
         ],
-        alternative: [],
+        alternative: [
+          {
+            title: "TanStack Query: 1 Intro (Arabic) — kimz codes",
+            url: "https://youtu.be/KIS-MJfuPDY?si=NEFlBFNJ5VPn7Xzt",
+            layers: "Frontend",
+            format: "Watch",
+            time: "20 min",
+            why: "Arabic video introduction to TanStack Query mental models and hooks.",
+          },
+          {
+            title: "Form & Data Validation with Zod (Arabic) — Youssef Turkey",
+            url: "https://youtu.be/4j5SZBTIXLc?si=LRh3UaiP1ODDDbDs",
+            layers: "Frontend, Contract",
+            format: "Watch",
+            time: "25 min",
+            why: "Arabic video tutorial on building schemas and validating runtime contracts with Zod.",
+          },
+          {
+            title: "كورس Prisma الشامل مع PostgreSQL & Express (Arabic) — Ali Sleem",
+            url: "https://www.youtube.com/watch?v=KoFgG7Rjhbc&t=775s",
+            layers: "Backend, Database",
+            format: "Watch",
+            time: "30 min",
+            why: "Arabic video tutorial covering Prisma schemas, migrations, and PostgreSQL relations.",
+          },
+          {
+            title: "تعلم كل شيء عن Prisma (ORM) مع TypeScript (Arabic) — Simple Arab Code",
+            url: "https://www.youtube.com/watch?v=uRPLhqR_d5I&t=92s",
+            layers: "Backend, Database",
+            format: "Watch",
+            time: "25 min",
+            why: "Arabic video overview of Prisma Client generation and queries.",
+          },
+          {
+            title: "كورس Nest JS في ٣ ساعات (Arabic) — أكاديمية ترميز",
+            url: "https://www.youtube.com/watch?v=RwOxUg2rsjY&t=4794s",
+            layers: "Backend",
+            format: "Watch",
+            time: "40 min",
+            why: "Arabic crash course covering controllers, services, and dependency injection in NestJS.",
+          },
+        ],
       },
-      reflectionQuestion: "Why is enqueue-on-accept safer than doing GitHub I/O in the HTTP request?",
-      prerequisites: ["Week 2", "Worker running locally"],
+      reflectionQuestion:
+        "Why is runtime validation with Zod necessary on the frontend even when TypeScript types already compile without errors?",
+      prerequisites: [
+        "Week 2: Connecting Frontend & Backend (HTTP & API Contracts)",
+        "Docker Compose PostgreSQL running locally",
+        "Node 22, Yarn & Vitest",
+      ],
     },
     4: {
       weekNumber: 4,
