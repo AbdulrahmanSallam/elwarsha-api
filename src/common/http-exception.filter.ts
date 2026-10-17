@@ -72,8 +72,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
             invalidParams: problem.invalidParams,
             error: {
               code: "validation_failed",
-              message:
-                problem.detail ?? "Validation failed constraints",
+              message: problem.detail ?? "Validation failed constraints",
               requestId,
             },
           });

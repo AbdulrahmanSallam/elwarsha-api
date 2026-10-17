@@ -1,7 +1,4 @@
-import {
-  UnprocessableEntityException,
-  ValidationPipe,
-} from "@nestjs/common";
+import { UnprocessableEntityException, ValidationPipe } from "@nestjs/common";
 
 export function createValidationPipe(): ValidationPipe {
   return new ValidationPipe({

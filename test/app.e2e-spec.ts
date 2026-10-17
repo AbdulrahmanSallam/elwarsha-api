@@ -106,10 +106,39 @@ describe("Foundation API (e2e)", () => {
       expect.arrayContaining([expect.objectContaining({ weekNumber: 1 })]),
     );
 
+    const weeks = await agent.get("/api/v1/cohorts/cohort-01/weeks").expect(200);
+    expect(weeks.body).toHaveLength(8);
+    expect(weeks.body[0]).toMatchObject({
+      weekNumber: 1,
+      cohort: expect.objectContaining({ slug: "cohort-01" }),
+      assignment: expect.objectContaining({
+        title: "Navigate the codebase and open a focused PR",
+        status: "published",
+      }),
+    });
+
+    const defaultWeeks = await agent.get("/api/v1/weeks").expect(200);
+    expect(defaultWeeks.body).toHaveLength(8);
+
+    const weekOne = await agent
+      .get("/api/v1/cohorts/cohort-01/weeks/1?locale=en")
+      .expect(200);
+    expect(weekOne.body).toMatchObject({
+      weekNumber: 1,
+      concept: "Architecture and modularity",
+      bigIdea: expect.any(String),
+      outcomes: expect.any(Array),
+      coreConcepts: expect.any(Array),
+      appliedThroughTheStack: expect.any(Array),
+    });
+
+    await agent.get("/api/v1/cohorts/cohort-01/weeks/99").expect(404);
+
     await agent.post("/api/v1/auth/logout").expect(201).expect({ ok: true });
 
     await agent.get("/api/v1/auth/me").expect(401);
     await agent.get("/api/v1/products").expect(401);
+    await agent.get("/api/v1/cohorts/cohort-01/weeks").expect(200);
   });
 
   it("preserves requested locale when logging in from English portal", async () => {
